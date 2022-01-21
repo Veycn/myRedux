@@ -72,6 +72,54 @@ function isPlainObject(obj) {
     return Object.getPrototypeOf(obj) === proto
 }
 
-function applyMiddleware(...middlewares){
+// 中间件个数不确定，用 middlewares 参数收集
 
+function applyMiddleware(...middlewares) {
+    // createStore(reducer, {}, enhancer)
+    // createStore(reducer, {}, applyMiddleware(logger, thunk))
+    // applyMiddleware 这里是函数调用，
+    // 在内部需要返回一个函数，这个函数用于接收 createStore
+    // 在 applyMiddleware 内部创建 store 并返回
+    return function (createStore) {
+        // 内部还要返回一个函数用于接收 createStore 的参数， reducer 和 preloadedState
+        return function (reducer, preloadedState) {
+            // 调用传递过来的这些中间件
+            // 创建 store
+            const store = createStore(reducer, preloadedState)
+            // 中间件中的 store 只有 getState 和 dispatch 方法
+            const middlewareApi = {
+                getState: store.getState,
+                dispatch: store.dispatch,
+            }
+            // 调用中间件的第一层函数，传递 阉割版的 store 对象
+            const chain = middlewares.map(middleware => middleware(middlewareApi))
+
+            // 传递第二层参数，next
+            // next 是下一个中间件， 最后一个中间价的 next 是 dispatch
+            const dispatch = compose(...chain)(store.dispatch)
+
+            return {
+                ...store,
+                dispatch
+            }
+        }
+    }
+}
+
+
+function compose() {
+    const funcs = [...arguments]
+
+    // 返回一个函数用来接收 dispatch
+    return function (dispatch) {
+        for (let i = funcs.length - 1; i >= 0; i--) {
+            // 第一轮循环，是最后一个中间件，它的 next 是从外部传入的真正的 dispatch
+            // 后面的每一轮循环，都将 dispatch 覆盖掉
+            // funcs[i](dispatch) 调用之后返回值就是中间件最内层的函数
+            dispatch = funcs[i](dispatch)
+        }
+        // 循环结束之后，dispatch 是第一个中间件的最内层函数
+        // 这个 dispatch 被调用的时候，会一直 next 下去，最终执行到真正的 dispatch
+        return dispatch
+    }
 }

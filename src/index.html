@@ -9,6 +9,8 @@
 <span id="number">0</span>
 <button id="minus">-</button>
 <script src="./myRedux.js"></script>
+<script src="./middlewares/logger.js"></script>
+<script src="./middlewares/thunk.js"></script>
 <script>
 
     function enhancer(createStore){
@@ -37,6 +39,7 @@
         }
     }
     function reducer(state, action){
+        console.log(action)
         switch (action.type){
             case '+':
                 return state + 1
@@ -46,7 +49,7 @@
                 return state
         }
     }
-    const store = createStore(reducer, 0, enhancer)
+    const store = createStore(reducer, 0, applyMiddleware(logger, thunk))
 
     document.getElementById('plus').addEventListener('click', () => {
         store.dispatch((dispatch) => {
@@ -59,9 +62,9 @@
         store.dispatch({type: '-'})
     })
 
-    store.subscribe(() => {
-        document.getElementById('number').innerText = store.getState()
-    })
+    // store.subscribe(() => {
+    //     document.getElementById('number').innerText = store.getState()
+    // })
 </script>
 </body>
 </html>
