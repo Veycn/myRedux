@@ -1,3 +1,6 @@
+## redux
+暴力实现一个简易的 redux
+```javascript
 /**
  *
  * @param reducer
@@ -75,3 +78,15 @@ function isPlainObject(obj) {
 function applyMiddleware(...middlewares){
 
 }
+
+```
+## 中间件
+
+在视图中触发 `action` 的时候，按照正常的 `redux` 工作流程，会被 `reducer` 接收到。
+加入了中间件以后， `action` 会先被中间件处理，一个个 中间件执行完毕之后，才会传递给 `reducer` 
+
+中间件就是方便我们在 action 触发之后，reducer 接收之前去做一些事情。本质上，中间件就是对 dispatch 函数进行增强，如 `thunk` 提供了处理异步的能力。
+
+
+## applyMiddleware
+在 redux 中，提供了一个中间件核心 API， `applyMiddleware`。它可以让多个中间件进行组合。 
