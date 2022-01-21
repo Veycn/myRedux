@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<button id="plus">+</button>
+<span id="number">0</span>
+<button id="minus">-</button>
+<script src="./myRedux.js"></script>
+<script>
+
+    function enhancer(createStore){
+        return function (reducer, preloadedState){
+            // 调用 createStore 创建一个普通的 store
+            const store = createStore(reducer, preloadedState)
+
+            // 拿到 dispatch 进行争强，赋予 dispatch 处理异步事物的能力
+            // action 除了可以传递 普通对象，还可以传递一个函数
+            const dispatch = store.dispatch
+            const _dispatch = function (action){
+                // 如果 action 是一个函数，调用它，将 dispatch 传递过去
+                // 在这个函数中，合适的时候再触发 dispatch
+                if (typeof action === 'function'){
+                    return action(dispatch)
+                }
+                // 普通对象，直接 dispatch
+                dispatch(action)
+            }
+
+            return {
+                ...store,
+                // 用增强之后的 _dispatch 覆盖之前的 dispatch
+                dispatch: _dispatch
+            }
+        }
+    }
+    function reducer(state, action){
+        switch (action.type){
+            case '+':
+                return state + 1
+            case '-':
+                return state - 1
+            default:
+                return state
+        }
+    }
+    const store = createStore(reducer, 0, enhancer)
+
+    document.getElementById('plus').addEventListener('click', () => {
+        store.dispatch((dispatch) => {
+            setTimeout(() => {
+                dispatch({type: '+'})
+            }, 2000)
+        })
+    })
+    document.getElementById('minus').addEventListener('click', () => {
+        store.dispatch({type: '-'})
+    })
+
+    store.subscribe(() => {
+        document.getElementById('number').innerText = store.getState()
+    })
+</script>
+</body>
+</html>
