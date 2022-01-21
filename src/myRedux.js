@@ -123,3 +123,60 @@ function compose() {
         return dispatch
     }
 }
+
+
+function bindActionCreators(actionCreators, dispatch) {
+    const boundActionCreators = {}
+
+    for (let key in actionCreators) {
+        // // 用闭包存储 key，否则每个 action 都是最后一个 key 对应的 action，或者用 let 声明 key
+        // (function (key){
+        //
+        // })(key)
+        boundActionCreators[key] = function () {
+            dispatch(actionCreators[key]())
+        }
+    }
+    // { increment: function(){ dispatch( (function increment(){return {type: 'increment'}})() ) } }
+    return boundActionCreators
+}
+
+// 返回的内容长这个样子
+// {
+//     increment: function Anonymous() {
+//         dispatch(
+//            (function increment() {
+//                return {type: 'increment'}
+//            })()
+//         )
+//     }
+// }
+
+
+/**
+ * combineReducer 接收一个参数，就是多个 reducer 组合成的一个对象
+ * reducer 函数接收两个参数，state 和 action， 所以应该在内部返回一个函数, 用来接收这两个参数
+ */
+function combineReducer(reducers) {
+    // reducers: { counter: counterReducer, modal: modalReducer }
+    // 检查 reducer 类型，必须是函数
+    const reducerKeys = Object.keys(reducers)
+    for (let i = 0; i < reducerKeys.length; i++){
+        let key = reducerKeys[i]
+        if (typeof reducers[key] !== 'function'){
+            throw new TypeError('reducer must be a function')
+        }
+    }
+    // 调用一个个 reducer，将每一个 reducer 返回值存储到一个新的大对象中
+    // state: { counter: 0, modal: { show: false } }
+    return function (state, action){
+        const nextState = {}
+        for (let i = 0; i < reducerKeys.length; i++){
+            let key = reducerKeys[i]            // counter
+            let reducer = reducers[key]         // counterReducer
+            let prevStateForKey = state[key]    // 0
+            nextState[key] = reducer(prevStateForKey, action)   // nextState['counter'] = reducer(0, action)
+        }
+        return nextState
+    }
+}

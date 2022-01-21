@@ -1,0 +1,20 @@
+{
+  "name": "myRedux",
+  "version": "1.0.0",
+  "description": "暴力实现一个简易的 redux ```javascript /**  *  * @param reducer  * @param preloadedState  * @param enhancer 对 createStore 返回的参数进行增强，enhancer 必须是一个函数  *  applyMiddleware 就是一个 enhancer  */ function createStore(reducer, preloadedState, enhancer) {     if (typeof reducer !== \"function\") {         throw new TypeError('reducer must be a function')     }     if (typeof enhancer !== 'undefined') {         if (typeof enhancer !== \"function\") {             throw new TypeError('enhancer must be a function')         } else {             // 如果传递了 enhancer，将 reducer, preloadedState 交由 enhancer 自己去创建 store             return enhancer(createStore)(reducer, preloadedState)         }     }     // store 对象中存储的状态     let currentState = preloadedState     // 存放订阅者函数     let currentListeners = []",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Veycn/myRedux.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Veycn/myRedux/issues"
+  },
+  "homepage": "https://github.com/Veycn/myRedux#readme"
+}

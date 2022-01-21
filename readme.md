@@ -209,3 +209,101 @@ function compose() {
 ```
 
 ### bindActionCreator
+bindActionCreator 的作用是将 action 对象转换成可以触发 reducer 的函数。
+
+内部的原理其实就是用 dispatch 去触发对应的 action 
+```javascript
+function increment (){
+    return { type: 'increment' }
+}
+
+function decrement (){
+    return { type: 'decrement' }
+}
+
+const actions = bindActionCreators({
+    increment,
+    decrement
+}, dispatch)
+```
+本质上就是为了给每一个`action` 加上`dispatch` 。
+
+`function increment (){
+return { type: 'increment' }
+} ====>  dispatch({type: 'increment'})`
+```javascript
+function bindActionCreators(actionCreators, dispatch) {
+    const boundActionCreators = {}
+
+    for (let key in actionCreators) {
+        // // 用闭包存储 key，否则每个 action 都是最后一个 key 对应的 action，或者用 let 声明 key
+        // (function (key){
+        //
+        // })(key)
+        boundActionCreators[key] = function () {
+            dispatch(actionCreators[key]())
+        }
+    }
+    // { increment: function(){ dispatch( (function increment(){return {type: 'increment'}})() ) } }
+    return boundActionCreators
+}
+// 返回的内容长这个样子
+// {
+//     increment: function Anonymous() {
+//         dispatch(
+//            (function increment() {
+//                return {type: 'increment'}
+//            })()
+//         )
+//     }
+// }
+```
+接下来就可以这样使用，而不用每次都写 `dispatch({type: 'increment'})` :
+```javascript
+const actions = bindActionCreators({
+    decrement,
+    increment,
+
+}, store.dispatch)
+
+actions.increment()
+actions.decrement()
+```
+
+### combineReducers
+
+在 redux 中，我们可以按照业务的不同拆分成一个个小的 reducer。再通过 combineReducer 将这些小的 reducer 合并起来。
+
+```javascript
+const rootReducer = combineReducers({counter: counterReducer})
+const store = createStore(rootReducer, { counter: 0 }, applyMiddleware(logger, thunk))
+
+/**
+ * 实现
+ * combineReducer 接收一个参数，就是多个 reducer 组合成的一个对象
+ * reducer 函数接收两个参数，state 和 action， 所以应该在内部返回一个函数, 用来接收这两个参数
+ */
+function combineReducer(reducers) {
+    // reducers: { counter: counterReducer, modal: modalReducer }
+    // 检查 reducer 类型，必须是函数
+    const reducerKeys = Object.keys(reducers)
+    for (let i = 0; i < reducerKeys.length; i++){
+        let key = reducerKeys[i]
+        if (typeof reducers[key] !== 'function'){
+            throw new TypeError('reducer must be a function')
+        }
+    }
+    // 调用一个个 reducer，将每一个 reducer 返回值存储到一个新的大对象中
+    // state: { counter: 0, modal: { show: false } }
+    return function (state, action){
+        const nextState = {}
+        for (let i = 0; i < reducerKeys.length; i++){
+            let key = reducerKeys[i]            // counter
+            let reducer = reducers[key]         // counterReducer
+            let prevStateForKey = state[key]    // 0
+            nextState[key] = reducer(prevStateForKey, action)   // nextState['counter'] = reducer(0, action)
+        }
+        return nextState
+    }
+}
+```

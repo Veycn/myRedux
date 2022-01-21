@@ -38,7 +38,7 @@
             }
         }
     }
-    function reducer(state, action){
+    function counterReducer(state, action){
         console.log(action)
         switch (action.type){
             case '+':
@@ -49,22 +49,33 @@
                 return state
         }
     }
-    const store = createStore(reducer, 0, applyMiddleware(logger, thunk))
+    const rootReducer = combineReducer({ counter: counterReducer })
+
+    const store = createStore(rootReducer, { counter: 0 }, applyMiddleware(logger, thunk))
+
+    function increment (){
+        return { type: '+' }
+    }
+    function decrement (){
+        return { type: '-' }
+    }
+
+    const actions = bindActionCreators({
+        decrement,
+        increment,
+
+    }, store.dispatch)
 
     document.getElementById('plus').addEventListener('click', () => {
-        store.dispatch((dispatch) => {
-            setTimeout(() => {
-                dispatch({type: '+'})
-            }, 2000)
-        })
+        actions.increment()
     })
     document.getElementById('minus').addEventListener('click', () => {
-        store.dispatch({type: '-'})
+        actions.decrement()
     })
 
-    // store.subscribe(() => {
-    //     document.getElementById('number').innerText = store.getState()
-    // })
+    store.subscribe(() => {
+        document.getElementById('number').innerText = store.getState().counter
+    })
 </script>
 </body>
 </html>
