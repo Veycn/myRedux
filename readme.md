@@ -1,5 +1,6 @@
 ## redux
-暴力实现一个简易的 redux
+本篇文章的内容是 手写一个简易的 redux. `applyMiddleware` 的部分代码需要重点理解。
+
 ```javascript
 /**
  *
@@ -91,7 +92,7 @@ function enhancer(createStore){
             // 调用 createStore 创建一个普通的 store
             const store = createStore(reducer, preloadedState)
 
-            // 拿到 dispatch 进行争强，赋予 dispatch 处理异步事物的能力
+            // 拿到 dispatch 进行增强，赋予 dispatch 处理异步事物的能力
             // action 除了可以传递 普通对象，还可以传递一个函数
             const dispatch = store.dispatch
             const _dispatch = function (action){
@@ -144,7 +145,9 @@ function logger(store){
 
 
 ```javascript
+
 var store = createStore(reducer, {}, applyMiddleware(logger, thunk))
+
 ```
 
 中间件会按照注册顺序逐个执行。最后把结果交给 reducer。
@@ -156,8 +159,8 @@ var store = createStore(reducer, {}, applyMiddleware(logger, thunk))
 function applyMiddleware(...middlewares) {
     // createStore(reducer, {}, enhancer)
     // createStore(reducer, {}, applyMiddleware(logger, thunk))
-    // applyMiddleware 这里是函数调用，
-    // 在内部需要返回一个函数，这个函数用于接收 createStore
+    // enhancer 是一个函数，applyMiddleware 这里是函数调用
+    // 所以在内部需要返回一个函数，这个函数用于接收 createStore
     // 在 applyMiddleware 内部创建 store 并返回
     return function (createStore) {
         // 内部还要返回一个函数用于接收 createStore 的参数， reducer 和 preloadedState
@@ -165,7 +168,7 @@ function applyMiddleware(...middlewares) {
             // 调用传递过来的这些中间件
             // 创建 store
             const store = createStore(reducer, preloadedState)
-            // 中间件中的 store 只有 getState 和 dispatch 方法
+            // 中间件中的 store 只有 getState 和 dispatch 方法（阉割版）
             const middlewareApi = {
                 getState: store.getState,
                 dispatch: store.dispatch,
@@ -307,3 +310,6 @@ function combineReducer(reducers) {
     }
 }
 ```
+
+
+[详细代码和示例](https://github.com/Veycn/myRedux)
